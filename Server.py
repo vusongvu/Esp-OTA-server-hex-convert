@@ -50,6 +50,106 @@ def install_avr():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+@app.route('/game', methods=['GET'])
+def snake_game():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Snake Mini</title>
+      <style>
+        body {
+          margin: 0;
+          background: #000;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          flex-direction: column;
+        }
+        canvas {
+          background: #111;
+          border: 2px solid #444;
+          touch-action: none;
+        }
+        .btns {
+          margin-top: 10px;
+          display: grid;
+          grid-template-columns: repeat(3, 60px);
+          gap: 5px;
+        }
+        button {
+          width: 60px; height: 60px; font-size: 18px;
+          background: #333; color: white; border: none;
+          border-radius: 8px;
+        }
+      </style>
+    </head>
+    <body>
+      <canvas id="game" width="200" height="200"></canvas>
+      <div class="btns">
+        <span></span><button onclick="dir(0,-1)">⬆️</button><span></span>
+        <button onclick="dir(-1,0)">⬅️</button><span></span><button onclick="dir(1,0)">➡️</button>
+        <span></span><button onclick="dir(0,1)">⬇️</button><span></span>
+      </div>
+
+      <script>
+        const canvas = document.getElementById("game");
+        const ctx = canvas.getContext("2d");
+        const box = 20;
+        let snake = [{ x: 5, y: 5 }];
+        let food = { x: Math.floor(Math.random() * 10), y: Math.floor(Math.random() * 10) };
+        let dx = 1, dy = 0;
+
+        function dir(x, y) {
+          if (-x === dx && -y === dy) return;
+          dx = x; dy = y;
+        }
+
+        function draw() {
+          ctx.fillStyle = "#111";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          ctx.fillStyle = "lime";
+          for (let part of snake) {
+            ctx.fillRect(part.x * box, part.y * box, box - 2, box - 2);
+          }
+
+          ctx.fillStyle = "red";
+          ctx.fillRect(food.x * box, food.y * box, box - 2, box - 2);
+
+          let head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+          if (
+            head.x < 0 || head.y < 0 ||
+            head.x >= canvas.width / box || head.y >= canvas.height / box ||
+            snake.some(part => part.x === head.x && part.y === head.y)
+          ) {
+            alert("Game Over!");
+            snake = [{ x: 5, y: 5 }];
+            dx = 1; dy = 0;
+            food = { x: Math.floor(Math.random() * 10), y: Math.floor(Math.random() * 10) };
+            return;
+          }
+
+          snake.unshift(head);
+
+          if (head.x === food.x && head.y === food.y) {
+            food = {
+              x: Math.floor(Math.random() * (canvas.width / box)),
+              y: Math.floor(Math.random() * (canvas.height / box))
+            };
+          } else {
+            snake.pop();
+          }
+        }
+
+        setInterval(draw, 200);
+      </script>
+    </body>
+    </html>
+    """
 
 @app.route('/compile', methods=['POST'])
 def compile_arduino():
